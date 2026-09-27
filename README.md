@@ -36,6 +36,7 @@ In Claude Code, you can explicitly invoke the plugin skill with `/typesafe:types
 | Skill | Purpose |
 |---|---|
 | [typesafe-ai](skills/typesafe-ai/SKILL.md) | Design TypeSafe workflows, find current docs and cookbooks, and compose typed judgments in code |
+| [safe-migration-review](skills/safe-migration-review/SKILL.md) | 迁移前安全评审：备份校验、盘点读写方、找静默失败点、排切换顺序、反方评审，交人决策 |
 
 ## License
 
