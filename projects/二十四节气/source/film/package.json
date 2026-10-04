@@ -1,0 +1,21 @@
+{
+  "name": "web",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fontsource/liu-jian-mao-cao": "^5.3.0",
+    "@fontsource/ma-shan-zheng": "^5.3.1",
+    "@fontsource/noto-serif-sc": "^5.3.0",
+    "@fontsource/zhi-mang-xing": "^5.3.0",
+    "lxgw-wenkai-webfont": "^1.7.0",
+    "three": "^0.186.1",
+    "three-globe": "^2.45.3"
+  }
+}
