@@ -37,6 +37,8 @@ In Claude Code, you can explicitly invoke the plugin skill with `/typesafe:types
 |---|---|
 | [typesafe-ai](skills/typesafe-ai/SKILL.md) | Design TypeSafe workflows, find current docs and cookbooks, and compose typed judgments in code |
 | [safe-migration-review](skills/safe-migration-review/SKILL.md) | 迁移前安全评审：备份校验、盘点读写方、找静默失败点、排切换顺序、反方评审，交人决策 |
+| [paper-motion-explainer](skills/paper-motion-explainer/SKILL.md) | 纸艺停格风格科普动画：概念 → 七幕分镜 → 转场 → 配音声音 → 1920×1080 成片，珊瑚色像素机器人做旁白 |
+| [image-blaster](skills/image-blaster/SKILL.md) | 启动器：克隆并固定 neilsonnn/image-blaster，配好 World Labs / FAL key，交给它自带的 skill 把一张图变成 3D 场景、模型和音效 |
 
 ## License
 
