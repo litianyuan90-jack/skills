@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>照見 · The Mirror Cave</title>
+<meta name="description" content="照見 Zhao Jian — an interactive Dunhuang mirror cave on time, reflection, arising and ceasing, form and emptiness. 敦煌镜窟交互艺术。">
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+:root{
+  --ink:#efe4cf; --ink-dim:rgba(239,228,207,.62); --ink-faint:rgba(239,228,207,.28);
+  --gold:#d9a95b; --cinnabar:#b5442c; --malachite:#4f9c88; --lapis:#34558f;
+  --bg:#0b0807; --panel:rgba(16,11,9,.72);
+  --serif:"ZhaoSerif","Noto Serif SC","Songti SC","STSong",serif;
+  --brush:"ZhaoBrush","Ma Shan Zheng","ZhaoSerif",serif;
+  --latin:"ZhaoLatin","Cormorant Garamond","Iowan Old Style",Georgia,serif;
+}
+:root{color-scheme:dark} /* a single, deliberate lamplit-cave look in every theme */
+@media (prefers-reduced-motion: reduce){ *{transition-duration:.01ms!important} }
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);overflow:hidden;font-family:var(--serif);-webkit-font-smoothing:antialiased}
+canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas#gl.wiping{cursor:crosshair}
+canvas#gl.dragging{cursor:grabbing}
+.en{font-family:var(--latin);font-style:italic;letter-spacing:.02em}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:inherit}
+
+/* ---------- prelude ---------- */
+#prelude{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:radial-gradient(120% 90% at 50% 60%,#1d1410 0%,#0b0807 60%,#050403 100%);transition:opacity 2.4s ease}
+#prelude.gone{opacity:0;pointer-events:none}
+#sand{position:absolute;inset:0;width:100%;height:100%}
+.pre-inner{position:relative;display:flex;gap:clamp(24px,6vw,90px);align-items:center;padding:0 16px;max-width:1100px}
+.pre-title{font-family:var(--brush);font-size:clamp(84px,16vw,190px);writing-mode:vertical-rl;line-height:1;color:var(--ink);text-shadow:0 0 40px rgba(217,169,91,.18)}
+.pre-head{display:flex;flex-direction:column;align-items:center;gap:18px}
+.pre-sub{font-family:var(--latin);font-style:italic;font-size:clamp(14px,1.5vw,18px);letter-spacing:.28em;color:var(--gold);text-transform:uppercase;white-space:nowrap}
+.pre-text{max-width:460px}
+.sutra{writing-mode:vertical-rl;font-size:clamp(15px,1.5vw,18px);letter-spacing:.24em;line-height:2.2;color:var(--ink-dim);margin:0 0 28px auto;width:max-content}
+.pre-en{font-family:var(--latin);font-style:italic;font-size:clamp(15px,1.4vw,18px);line-height:1.6;color:var(--ink-dim);margin-bottom:30px}
+#enter{display:inline-flex;align-items:baseline;gap:14px;padding:14px 26px;border:1px solid rgba(217,169,91,.55);border-radius:2px;letter-spacing:.4em;font-size:18px;transition:background .6s,border-color .6s}
+#enter:hover,#enter:focus-visible{background:rgba(217,169,91,.12);border-color:var(--gold);outline:none}
+#enter .en{letter-spacing:.12em;font-size:15px;color:var(--gold)}
+.pre-note{margin-top:16px;font-size:12px;color:var(--ink-faint);letter-spacing:.12em}
+@media (max-width:640px){
+  .pre-inner{flex-direction:column;gap:18px;text-align:left}
+  .pre-title{writing-mode:horizontal-tb;font-size:72px}
+  .pre-head{align-items:flex-start}
+  .sutra{writing-mode:horizontal-tb;width:auto;margin:0 0 14px;letter-spacing:.12em;line-height:1.9}
+}
+
+/* ---------- hud ---------- */
+#hud{position:fixed;inset:0;z-index:5;pointer-events:none;opacity:0;transition:opacity 2s}
+#hud.on{opacity:1}
+#hud > *{pointer-events:auto}
+.brand{position:absolute;left:clamp(16px,3vw,36px);top:clamp(14px,3vh,30px);display:flex;align-items:baseline;gap:12px;pointer-events:none}
+.brand b{font-family:var(--brush);font-weight:400;font-size:30px}
+.brand span{font-family:var(--latin);font-style:italic;color:var(--ink-dim);font-size:15px;letter-spacing:.08em}
+#hint{position:absolute;left:50%;bottom:clamp(18px,4vh,40px);transform:translateX(-50%);text-align:center;transition:opacity 1.2s;pointer-events:none;width:min(92vw,720px)}
+#hint .zh{font-size:15px;letter-spacing:.3em;color:var(--ink)}
+#hint .en{display:block;font-size:14px;color:var(--ink-dim);margin-top:4px}
+
+/* time rail */
+#rail{position:absolute;right:clamp(16px,3vw,40px);top:50%;transform:translateY(-50%);height:min(56vh,460px);width:120px;display:flex;justify-content:flex-end;touch-action:none}
+#rail .track{position:relative;width:1px;height:100%;background:linear-gradient(var(--ink-faint),rgba(239,228,207,.5),var(--ink-faint));cursor:ns-resize}
+#rail .track::before{content:"";position:absolute;inset:0 -18px}
+#rail .tick{position:absolute;right:6px;width:5px;height:1px;background:var(--ink-faint)}
+#knob{position:absolute;left:-7px;width:15px;height:15px;border-radius:50%;border:1px solid var(--gold);background:rgba(217,169,91,.18);box-shadow:0 0 18px rgba(217,169,91,.45);transform:translateY(-50%)}
+#era{position:absolute;right:20px;transform:translateY(-50%);text-align:right;white-space:nowrap;pointer-events:none}
+#era .zh{font-size:15px;letter-spacing:.2em}
+#era .en{display:block;font-size:13px;color:var(--ink-dim)}
+.rail-cap{position:absolute;right:-8px;top:-30px;font-size:12px;letter-spacing:.2em;color:var(--ink-dim);white-space:nowrap}
+.rail-cap.bot{top:auto;bottom:-30px}
+
+/* tools */
+#tools{position:absolute;left:clamp(16px,3vw,36px);bottom:clamp(16px,3.5vh,34px);display:flex;gap:10px}
+.tool{display:flex;flex-direction:column;align-items:center;min-width:64px;padding:9px 10px;border:1px solid var(--ink-faint);background:var(--panel);backdrop-filter:blur(6px);border-radius:2px;transition:border-color .4s}
+.tool:hover,.tool:focus-visible{border-color:var(--gold);outline:none}
+.tool .zh{font-size:16px;letter-spacing:.25em}
+.tool .en{font-size:12px;color:var(--ink-dim)}
+#formEmpty .zh i{font-style:normal;transition:color .6s}
+
+/* verses */
+#verse{position:fixed;z-index:6;left:clamp(24px,7vw,110px);top:50%;transform:translateY(-50%);display:flex;flex-direction:row;gap:26px;align-items:flex-start;pointer-events:none;opacity:0;transition:opacity 2.2s}
+#verse.on{opacity:1}
+#verse .v-zh{writing-mode:vertical-rl;font-size:clamp(20px,2.2vw,28px);letter-spacing:.42em;line-height:1.9;text-shadow:0 2px 18px rgba(0,0,0,.85)}
+#verse .v-src{writing-mode:vertical-rl;font-size:13px;color:var(--gold);letter-spacing:.3em;margin-top:8px}
+#verse .v-en{max-width:260px;font-family:var(--latin);font-style:italic;font-size:16px;line-height:1.55;color:var(--ink-dim);align-self:flex-end;text-shadow:0 2px 12px rgba(0,0,0,.9)}
+@media (max-width:720px){
+  #verse{right:16px;left:16px;top:auto;bottom:110px;transform:none;flex-direction:column;gap:10px}
+  #verse .v-zh,#verse .v-src{writing-mode:horizontal-tb;letter-spacing:.18em;font-size:18px}
+  #verse .v-en{max-width:none}
+  #rail{height:38vh;width:90px}
+}
+
+/* lamp card (agent.space) */
+#lamp{position:fixed;z-index:8;left:50%;bottom:clamp(70px,12vh,120px);transform:translate(-50%,16px);width:min(92vw,560px);padding:24px 26px 22px;background:linear-gradient(180deg,rgba(28,19,13,.92),rgba(12,8,6,.94));border:1px solid rgba(217,169,91,.35);box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 60px rgba(217,169,91,.08);opacity:0;pointer-events:none;transition:opacity .9s,transform .9s}
+#lamp.on{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+#lamp h3{font-weight:400;font-size:20px;letter-spacing:.35em;color:var(--gold)}
+#lamp h3 .en{font-size:15px;letter-spacing:.06em;margin-left:10px;color:var(--ink-dim)}
+#lamp blockquote{margin:14px 0 4px;font-size:17px;letter-spacing:.16em;line-height:1.8}
+#lamp .src{font-size:12px;color:var(--ink-dim);letter-spacing:.2em}
+#lamp p.en{margin-top:6px;font-size:15px;line-height:1.5;color:var(--ink-dim)}
+#lamp .pass{margin-top:16px;padding-top:14px;border-top:1px solid var(--ink-faint);font-size:15px;line-height:1.8;letter-spacing:.06em}
+#lamp .pass .en{display:block;font-size:14px;color:var(--ink-dim)}
+#lamp .row{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:12px;flex-wrap:wrap}
+#lamp a.go{display:inline-flex;gap:10px;align-items:baseline;text-decoration:none;padding:9px 16px;border:1px solid var(--gold);color:var(--ink);letter-spacing:.2em;transition:background .4s}
+#lamp a.go:hover,#lamp a.go:focus-visible{background:rgba(217,169,91,.16);outline:none}
+#lamp a.go .en{letter-spacing:.04em;color:var(--gold)}
+#lamp .close{font-size:13px;color:var(--ink-dim);letter-spacing:.2em}
+
+/* info */
+#info{position:fixed;z-index:9;inset:0;background:rgba(6,4,3,.86);backdrop-filter:blur(8px);display:grid;place-items:center;opacity:0;pointer-events:none;transition:opacity .8s;overflow:auto;padding:24px 16px}
+#info.on{opacity:1;pointer-events:auto}
+#info .box{max-width:760px;line-height:1.75;font-size:15px}
+#info h2{font-family:var(--brush);font-weight:400;font-size:42px}
+#info h2 .en{font-family:var(--latin);font-size:20px;color:var(--ink-dim);margin-left:12px}
+#info h4{margin:22px 0 6px;font-weight:500;letter-spacing:.3em;color:var(--gold);font-size:14px}
+#info p,#info li{color:var(--ink-dim)}
+#info ul{padding-left:18px}
+#info .close{margin-top:22px;padding:8px 18px;border:1px solid var(--ink-faint)}
+#info .sutra-fig{margin:22px 0 4px}
+#info .sutra-fig img{display:block;max-width:100%;border:1px solid var(--ink-faint)}
+#info .sutra-fig figcaption{font-size:12px;color:var(--ink-dim);margin-top:6px}
+
+/* film overlays */
+#film{position:fixed;inset:0;z-index:12;pointer-events:none;display:none}
+.film #film{display:block}
+.film #hud,.film #prelude{display:none}
+#sub{position:absolute;z-index:4;left:0;right:0;bottom:6.5%;text-align:center;transition:none}
+#sub .zh{font-size:34px;letter-spacing:.22em;text-shadow:0 2px 14px rgba(0,0,0,.95),0 0 3px rgba(0,0,0,.9)}
+#sub .en{display:block;font-family:var(--latin);font-style:italic;font-size:27px;color:#e6d8bd;margin-top:6px;text-shadow:0 2px 12px rgba(0,0,0,.95)}
+#card{position:absolute;z-index:3;inset:0;display:grid;place-items:center;text-align:center}
+#card .big{font-family:var(--brush);font-size:220px;line-height:1}
+#card .mid{font-size:44px;letter-spacing:.5em}
+#card .sm{font-family:var(--latin);font-style:italic;font-size:30px;color:var(--ink-dim);letter-spacing:.06em}
+#card .gold{color:var(--gold)}
+#fade{position:absolute;z-index:2;inset:0;background:#000}
+#grain{position:absolute;inset:0;width:100%;height:100%;opacity:.07;mix-blend-mode:screen}
+.vtext{position:absolute;writing-mode:vertical-rl;font-size:40px;letter-spacing:.5em;text-shadow:0 2px 20px rgba(0,0,0,.9)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<canvas id="gl" aria-label="Interactive 3D Dunhuang cave with mirrors"></canvas>
+
+<section id="prelude" aria-label="Prelude">
+  <canvas id="sand" aria-hidden="true"></canvas>
+  <div class="pre-inner">
+    <div class="pre-head"><h1 class="pre-title">照見</h1><p class="pre-sub">Zhao Jian · The Mirror Cave</p></div>
+    <div class="pre-text">
+      <p class="sutra">观自在菩萨，行深般若波罗蜜多时，<br>照见五蕴皆空。</p>
+      <p class="pre-en">When Avalokiteśvara moved deep in the perfection of wisdom, he shone a light on the five aggregates and saw that all of them are empty.<br><span style="opacity:.7">— Heart Sūtra</span></p>
+      <button id="enter" type="button">入洞 <span class="en">Enter the cave</span></button>
+      <p class="pre-note">建议佩戴耳机 · Headphones recommended</p>
+    </div>
+  </div>
+</section>
+
+<div id="hud">
+  <div class="brand"><b>照見</b><span>The Mirror Cave</span></div>
+
+  <div id="rail" aria-label="Time">
+    <div class="track" id="track">
+      <span class="rail-cap">生 · arise</span>
+      <span class="rail-cap bot">灭 · cease</span>
+      <div id="knob" role="slider" tabindex="0" aria-label="Time" aria-valuemin="0" aria-valuemax="100"></div>
+      <div id="era"><span class="zh"></span><span class="en"></span></div>
+    </div>
+  </div>
+
+  <div id="tools">
+    <button class="tool" id="formEmpty" type="button" title="Swap form and emptiness"><span class="zh"><i id="feA">色</i>⇄<i id="feB">空</i></span><span class="en">form · emptiness</span></button>
+    <button class="tool" id="sound" type="button"><span class="zh">声</span><span class="en" id="soundEn">sound on</span></button>
+    <button class="tool" id="about" type="button"><span class="zh">缘</span><span class="en">about</span></button>
+  </div>
+
+  <div id="hint" aria-live="polite"><span class="zh"></span><span class="en"></span></div>
+</div>
+
+<div id="verse" aria-live="polite"><div><div class="v-zh"></div><div class="v-src"></div></div><div class="v-en"></div></div>
+
+<aside id="lamp" aria-label="The inexhaustible lamp">
+  <h3>无尽灯<span class="en">The Inexhaustible Lamp</span></h3>
+  <blockquote>譬如一灯燃百千灯，冥者皆明，明终不尽。</blockquote>
+  <div class="src">——《维摩诘所说经 · 菩萨品》</div>
+  <p class="en">“It is like one lamp lighting a hundred thousand lamps: the dark is all made bright, and the brightness is never used up.” — Vimalakīrti Sūtra</p>
+  <div class="pass">镜里的这盏灯，你数不尽。灯可以传下去，智能体也可以——让它们在云端长明，灯灯相续。<span class="en">The lamp in the mirror cannot be counted. A lamp can be passed on, and so can an agent: let yours keep burning in the cloud, lamp to lamp.</span></div>
+  <div class="row">
+    <a class="go" id="lampLink" href="https://agent.space/?ref=zhaojian" target="_blank" rel="noopener">传灯 <span class="en">pass the lamp · agent.space</span></a>
+    <button class="close" id="lampClose" type="button">归座 · back to the cave</button>
+  </div>
+</aside>
+
+<section id="info" aria-label="About">
+  <div class="box">
+    <h2>照見<span class="en">The Mirror Cave</span></h2>
+    <p>一座以莫高窟“覆斗顶”形制为原型的镜窟。西壁佛龛不塑佛像，只立一面铜镜；入洞之后，来路亦化为镜。两镜相照，窟中有窟，千窟千佛。镜中每深一层，时间便早一步；镜中每隔一层，色与空便互换一次。你在镜中找不到自己。</p>
+    <p class="en">A cave modelled on the truncated-pyramid ceiling chambers of Mogao. The niche of the west wall holds no statue, only a bronze mirror; once you are inside, the doorway behind you becomes a mirror too. Two mirrors facing each other: caves within caves, a thousand caves, a thousand Buddhas. Each layer deeper into the mirror is a little earlier in time; every other layer swaps form for emptiness. You will not find yourself in it.</p>
+    <h4>如何观看 · HOW TO LOOK</h4>
+    <ul>
+      <li>拖动环顾，W/S 或 ↑/↓ 前后行走 · Drag to look; W/S or ↑/↓ to walk</li>
+      <li>滚轮或右侧时间轴：起稿 → 敷彩 → 剥落 → 空 → 再生 · Scroll or use the rail to move time: sketch → colour → decay → emptiness → again</li>
+      <li>在镜上拖动，拂拭尘埃（神秀）；然后静止不动（惠能） · Drag on the mirror to wipe it (Shenxiu); then keep still (Huineng)</li>
+      <li>色 ⇄ 空：交换镜内外的色与空 · Swap form and emptiness inside and outside the mirror</li>
+      <li>那盏灯 · Touch the lamp</li>
+    </ul>
+    <figure class="sutra-fig"><img src="tex/sutra.jpg" alt="Frontispiece of the Diamond Sūtra, 868 CE, from the Dunhuang Library Cave" loading="lazy"><figcaption>《金刚经》卷首扉画，868 年，敦煌藏经洞 · Diamond Sūtra frontispiece, 868 CE, Library Cave, Dunhuang</figcaption></figure>
+    <h4>素材 · SOURCES</h4>
+    <ul>
+      <li>莫高窟第217窟南壁《法华经变》（盛唐），Wikimedia Commons，公有领域 PD-Art · Mogao Cave 217, south wall, Lotus Sūtra tableau (High Tang), public domain; via the attribution file of rebornrender-ctrl/mogao-daylight-timelapse.</li>
+      <li>敦煌壁画图像及其线描稿，取自 DhMural1714 数据集公开示例（Zou et al., “Line Drawing Guided Progressive Inpainting of Mural Damages”, github.com/qinnzou/mural-image-inpainting），仅用于非商业艺术展示 · Mural photographs and line drawings from the published examples of the DhMural1714 dataset, used for non-commercial artistic display.</li>
+      <li>《金刚经》卷首扉画（唐咸通九年，868），敦煌藏经洞出土，公有领域 · Diamond Sūtra frontispiece, 868 CE, Library Cave, public domain.</li>
+      <li>“千佛”由第217窟说法佛局部重复排列而成，模仿洞窟中千佛以粉本反复绘制的做法 · The thousand Buddhas repeat one detail of Cave 217, echoing how Mogao painters repeated a stencil.</li>
+      <li>惠能偈采用敦煌写本《坛经》文字（与后世通行本“本来无一物”不同，各家录文略有出入） · Huineng’s verse follows the Dunhuang manuscript of the Platform Sūtra, which differs from the later standard text.</li>
+    </ul>
+    <button class="close" id="infoClose" type="button">回到窟中 · return</button>
+  </div>
+</section>
+
+<div id="film" aria-hidden="true">
+  <canvas id="grain"></canvas>
+  <div id="card"></div>
+  <div id="sub"><span class="zh"></span><span class="en"></span></div>
+  <div id="fade"></div>
+</div>
+
+<script type="importmap">{ "imports": { "three": "./three.module.min.js" } }</script>
+<script type="module" src="main.js"></script>
+</body>
+</html>
