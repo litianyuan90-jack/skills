@@ -1,0 +1,2 @@
+partner_id,name,model,territory,status,commission_rule,signed_date,registered_accounts,samples,second_samples,programs,revenue,returns_or_cancels,owner,notes
+P-000,example-agent,A-regional-agent,DE-AT-CH,candidate,"paid after program confirm",,0,0,0,0,0,0,channel-manager,"示例行；model 取值 A-regional-agent / B-stock-store / C-factory-referral"
