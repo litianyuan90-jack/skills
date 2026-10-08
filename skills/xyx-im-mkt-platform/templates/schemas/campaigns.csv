@@ -1,0 +1,3 @@
+campaign_id,name,business_line,channel,partner_id,offer_id,spend,leads,qualified_calls,samples,second_samples,programs,revenue,churn_or_return,start_date,status,notes
+XYX-001,handfeel-after-wash,core,email,,OF-01,0,0,0,0,0,0,0,0,2026-10-13,draft,沿用 starter 原行
+XYX-IM-001,im-sample-request-page,IM,web,,OF-IM-01,0,0,0,0,0,0,0,0,,draft,样品申请页；OF-IM-01 需人先写入 offers.md
